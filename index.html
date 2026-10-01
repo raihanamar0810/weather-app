@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cuaca Kota | Weather App</title>
+  </head>
+  <body class="min-h-screen bg-sky-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+    <main class="mx-auto max-w-md px-4 py-12">
+      <h1 class="mb-6 text-3xl font-bold tracking-tight">Cuaca hari ini</h1>
+
+      <form id="search-form" class="mb-6 flex gap-2">
+        <label for="city-input" class="sr-only">Nama kota</label>
+        <input
+          id="city-input"
+          type="text"
+          required
+          placeholder="Cari kota, misalnya Jakarta"
+          class="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2 focus:outline-2 focus:outline-sky-600 dark:border-slate-600 dark:bg-slate-800"
+        />
+        <button
+          type="submit"
+          id="search-btn"
+          class="rounded-lg bg-sky-700 px-4 py-2 font-medium text-white hover:bg-sky-800 focus:outline-2 focus:outline-offset-2 focus:outline-sky-600 disabled:opacity-50"
+        >
+          Cari
+        </button>
+      </form>
+
+      <p id="status" class="mb-4 text-center text-slate-600 dark:text-slate-300" aria-live="polite">
+        Ketik nama kota untuk melihat cuacanya.
+      </p>
+
+      <section id="result" class="hidden rounded-2xl bg-white p-6 shadow dark:bg-slate-800">
+        <p id="place" class="text-lg font-semibold"></p>
+        <p id="temp" class="my-2 text-6xl font-bold"></p>
+        <p id="desc" class="mb-4 text-xl"></p>
+        <dl class="grid grid-cols-2 gap-4 border-t border-slate-200 pt-4 dark:border-slate-700">
+          <div>
+            <dt class="text-sm text-slate-600 dark:text-slate-300">Kelembapan</dt>
+            <dd id="humidity" class="text-lg font-medium"></dd>
+          </div>
+          <div>
+            <dt class="text-sm text-slate-600 dark:text-slate-300">Kecepatan angin</dt>
+            <dd id="wind" class="text-lg font-medium"></dd>
+          </div>
+        </dl>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
