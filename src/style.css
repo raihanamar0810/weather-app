@@ -8,3 +8,60 @@
 @media (prefers-reduced-motion: reduce) {
   .fade-in { animation: none; }
 }
+
+/* Latar mengikuti cuaca (diatur lewat data-theme di <body>) */
+body { background-attachment: fixed; }
+body[data-theme='clear'] { background-image: linear-gradient(#e0f2fe, #fef3c7); }
+body[data-theme='cloudy'] { background-image: linear-gradient(#f1f5f9, #cbd5e1); }
+body[data-theme='rain'] { background-image: linear-gradient(#dbeafe, #cbd5e1); }
+body[data-theme='storm'] { background-image: linear-gradient(#e2e8f0, #c7d2fe); }
+body[data-theme='fog'] { background-image: linear-gradient(#f1f5f9, #e5e7eb); }
+
+@media (prefers-color-scheme: dark) {
+  body[data-theme='clear'] { background-image: linear-gradient(#0c4a6e, #0f172a); }
+  body[data-theme='cloudy'] { background-image: linear-gradient(#334155, #0f172a); }
+  body[data-theme='rain'] { background-image: linear-gradient(#1e3a5f, #0f172a); }
+  body[data-theme='storm'] { background-image: linear-gradient(#312e81, #0f172a); }
+  body[data-theme='fog'] { background-image: linear-gradient(#374151, #111827); }
+}
+
+/* Adegan langit di halaman awal */
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes drift { from { transform: translateX(-18px); } to { transform: translateX(18px); } }
+
+.sun {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fde68a, #f59e0b);
+  box-shadow: 0 0 60px 20px rgba(251, 191, 36, 0.45);
+  animation: float 6s ease-in-out infinite;
+}
+#hero[data-time='night'] .sun {
+  background: radial-gradient(circle at 35% 35%, #f8fafc, #cbd5e1);
+  box-shadow: 0 0 60px 16px rgba(148, 163, 184, 0.4);
+}
+
+.cloud {
+  width: 90px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  animation: drift 9s ease-in-out infinite alternate;
+}
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+.cloud::before { width: 42px; height: 42px; top: -20px; left: 14px; }
+.cloud::after { width: 32px; height: 32px; top: -14px; left: 44px; }
+
+@media (prefers-color-scheme: dark) {
+  .cloud { background: rgba(148, 163, 184, 0.35); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sun, .cloud { animation: none; }
+}
