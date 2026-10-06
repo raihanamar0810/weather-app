@@ -13,6 +13,8 @@ const forecastEl = document.querySelector('#forecast')
 const heroEl = document.querySelector('#hero')
 const greetingEl = document.querySelector('#greeting')
 const homeBtn = document.querySelector('#home-btn')
+const detailsEl = document.querySelector('#details')
+const tipEl = document.querySelector('#tip')
 
 // ===== 2. Data tetap =====
 const WEATHER_TEXT = {
@@ -89,8 +91,8 @@ async function getCoordinates(city) {
 async function getWeather(lat, lon) {
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    `&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m` +
-    `&daily=temperature_2m_max,temperature_2m_min,weather_code` +
+    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m` +
+    `&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max,uv_index_max,sunrise,sunset` +
     `&timezone=auto&forecast_days=5`
   const res = await fetch(url)
   if (!res.ok) throw new Error('Gagal mengambil data cuaca. Coba lagi nanti.')
@@ -166,6 +168,50 @@ function renderHistory() {
   historyEl.append(clear)
 }
 
+const COMPASS = ['Utara', 'Timur Laut', 'Timur', 'Tenggara', 'Selatan', 'Barat Daya', 'Barat', 'Barat Laut']
+const compass = (deg) => COMPASS[Math.round(deg / 45) % 8]
+
+function uvLabel(uv) {
+  if (uv < 3) return 'Rendah'
+  if (uv < 6) return 'Sedang'
+  if (uv < 8) return 'Tinggi'
+  if (uv < 11) return 'Sangat tinggi'
+  return 'Ekstrem'
+}
+
+function weatherTip(rain, uv, temp) {
+  if (rain >= 60) return 'Peluang hujan tinggi hari ini, bawa payung.'
+  if (rain >= 30) return 'Ada kemungkinan hujan, siapkan payung lipat.'
+  if (uv >= 8) return 'Sinar UV sangat tinggi, pakai tabir surya dan hindari matahari siang.'
+  if (temp >= 33) return 'Cuaca panas, jangan lupa minum air putih.'
+  return 'Cuaca cukup nyaman untuk beraktivitas.'
+}
+
+function renderDetails(weather, daily) {
+  const windMs = (weather.wind_speed_10m / 3.6).toFixed(1)
+  const dir = weather.wind_direction_10m ?? 0
+  const rain = daily.precipitation_probability_max?.[0]
+  const uv = daily.uv_index_max?.[0]
+  const items = [
+    ['Terasa seperti', `${toDisplay(weather.apparent_temperature)}°${unit}`],
+    ['Kelembapan', `${weather.relative_humidity_2m}%`],
+    [
+      'Angin',
+      `${windMs} m/s<span class="block text-sm font-normal text-slate-600 dark:text-slate-300"><span class="inline-block" style="transform:rotate(${dir + 180}deg)" aria-hidden="true">↑</span> dari ${compass(dir)}</span>`,
+    ],
+    ['Peluang hujan', rain != null ? `${rain}%` : '-'],
+    ['Indeks UV', uv != null ? `${Math.round(uv)}<span class="block text-sm font-normal text-slate-600 dark:text-slate-300">${uvLabel(uv)}</span>` : '-'],
+    ['Matahari', `${daily.sunrise[0].slice(11, 16)} / ${daily.sunset[0].slice(11, 16)}`],
+  ]
+  detailsEl.innerHTML = items
+    .map(
+      ([label, value]) =>
+        `<div class="rounded-lg bg-slate-100 p-3 dark:bg-slate-700/50"><dt class="text-sm text-slate-600 dark:text-slate-300">${label}</dt><dd class="text-lg font-medium">${value}</dd></div>`,
+    )
+    .join('')
+  tipEl.textContent = weatherTip(rain ?? 0, uv ?? 0, weather.temperature_2m)
+}
+
 function render() {
   if (!current) return
   const { place, weather, daily } = current
@@ -175,8 +221,7 @@ function render() {
   document.querySelector('#temp').textContent = `${toDisplay(weather.temperature_2m)}°${unit}`
   document.querySelector('#icon').textContent = WEATHER_ICON[weather.weather_code] ?? ''
   document.querySelector('#desc').textContent = WEATHER_TEXT[weather.weather_code] ?? 'Tidak diketahui'
-  document.querySelector('#humidity').textContent = `${weather.relative_humidity_2m}%`
-  document.querySelector('#wind').textContent = `${(weather.wind_speed_10m / 3.6).toFixed(1)} m/s`
+  renderDetails(weather, daily)
 
   // Bar rentang suhu: posisi dihitung terhadap suhu terendah dan tertinggi minggu ini
   const weekMin = Math.min(...daily.temperature_2m_min)
@@ -188,14 +233,18 @@ function render() {
       const lo = daily.temperature_2m_min[i]
       const hi = daily.temperature_2m_max[i]
       const code = daily.weather_code[i]
+      const rain = daily.precipitation_probability_max?.[i]
       const width = Math.max(((hi - lo) / span) * 100, 6)
       const left = Math.min(((lo - weekMin) / span) * 100, 100 - width)
       return `
       <li class="py-2 ${i === 0 ? 'text-sky-700 dark:text-sky-300' : ''}">
         <div class="flex items-center justify-between gap-3">
-          <span class="w-24 font-medium">${dayName(date, i)}</span>
-          <span class="flex-1 text-sm text-slate-600 dark:text-slate-300"><span aria-hidden="true">${WEATHER_ICON[code] ?? ''}</span> ${WEATHER_TEXT[code] ?? '-'}</span>
+          <span class="font-medium">${dayName(date, i)}</span>
           <span class="tabular-nums">${toDisplay(hi)}° / ${toDisplay(lo)}°</span>
+        </div>
+        <div class="mt-0.5 flex items-center justify-between gap-3 text-sm text-slate-600 dark:text-slate-300">
+          <span><span aria-hidden="true">${WEATHER_ICON[code] ?? ''}</span> ${WEATHER_TEXT[code] ?? '-'}</span>
+          <span>${rain != null ? `<span class="sr-only">Peluang hujan </span><span aria-hidden="true">💧</span> ${rain}%` : ''}</span>
         </div>
         <div class="mt-1.5 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700" aria-hidden="true">
           <div class="h-full rounded-full bg-sky-500" style="margin-left:${left}%;width:${width}%"></div>
